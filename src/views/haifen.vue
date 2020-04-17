@@ -5,15 +5,8 @@
       <a class>海粉社区</a>
     </div>
     <div>
-      <div class="mescroll" ref="mescroll">
-        <!-- <div class="mescroll-downwarp mescroll-downwarp-reset">
-          <div class="downwarp-content">
-            <p class>
-              <img src="../assets/jiazai.gif" alt class="donwpng isshow" />
-            </p>
-            <p class="downwarp-tip"></p>
-          </div>
-        </div> -->
+      <mescroll-vue ref="mescroll" :down="mescrollDown" :up="mescrollUp" @init="mescrollInit">
+        <!--内容...-->
         <div>
           <div class="main">
             <div class="top_box">
@@ -82,8 +75,8 @@
             </div>
             <div class="featured_box">
               <div class="category js_category_tab">
-                <span class="on">精选内容</span>
-                <span>热议话题</span>
+                <span :class="{'on':isIndex0}">精选内容</span>
+                <span :class="{'on':!isIndex0}">热议话题</span>
               </div>
               <div class="list_box">
                 <!-- <Swiper3></Swiper3> -->
@@ -274,10 +267,7 @@
             </div>
           </div>
         </div>
-        <!-- <div class="mescroll-upwarp mescroll-hardware">
-          <p class="upwarp-nodata"></p>
-        </div> -->
-      </div>
+      </mescroll-vue>
     </div>
     <div class="posting js_posting">
       <div class="posting_box js_posting_box open">
@@ -302,74 +292,131 @@
 </template>
 
   <script>
+import $ from "jquery";
+
 import Swiper from "swiper";
 import axios from "axios";
 import Swiper1 from "@/components/swiper1.vue";
 import Swiper2 from "@/components/swiper2.vue";
 // import Swiper3 from "@/components/swiper3.vue";
-import MeScroll from "mescroll.js";
-import "mescroll.js/mescroll.min.css";
+
+import MescrollVue from "mescroll.js/mescroll.vue";
+
 export default {
   name: "home",
   components: {
     Swiper1,
-    Swiper2
+    Swiper2,
     // Swiper3
+    MescrollVue
   },
   data() {
     return {
       cell_item_list: [],
       cell_item_list2: [],
+      swiper3_right: [],
+      concat1: [],
+      concat2: [],
+      concat3: [],
+      ajaxsum: 0,
       mescroll: null,
-      swiper3_right: []
+      isIndex0: true,
+      mescrollDown: {
+        callback: this.downCallback, // 上拉回调,此处简写; 相当于 callback: function(page, mescroll) { }
+        textOutOffset: "松开立即刷新",
+        htmlContent:
+          '<p class><img src="data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAEsAAAAkCAYAAADB7MdlAAAA90lEQVRoQ+2ZQQrCMBBFJ1CCN3Dlxlu6cOXCW3bjyhuUIkTUVmjopPmKQuFl2z908uZPmqTBGNUEQrUSoQFLMAGwgCUQEKQ4C1gCAUGKs4AlEBCkOOsTWPvTJVkTzW69G94ed7Nwn7ELY1WxA4c85/fkHxMOcWOp7+an3URrD1sXVjHWzIqwvCI5SY8Jloo05uO+93xNnjG82AksnDWUocZZwAKWvs7irOlSXPwoAQtYv9my4CychbPyXfHfd/+0IW1IG66iDTlIv8rEQTqz61c7+KX7KJ4bP1kVE3CtLNACFrAEAoIUZwFLICBIcRawBAKCFGcJsO6zO5w0GcU2eQAAAABJRU5ErkJggg==" alt class="donwpng isshow" /></p><p class="downwarp-tip"></p>'
+      }, //下拉刷新的配置. (如果下拉刷新和上拉加载处理的逻辑是一样的,则mescrollDown可不用写了)
+      mescrollUp: {
+        // 上拉加载的配置.
+        callback: this.upCallback, // 上拉回调,此处简写; 相当于 callback: function(page, mescroll) { }
+        //以下是一些常用的配置,当然不写也可以的.
+        page: {
+          num: 0, //当前页 默认0,回调之前会加1; 即callback(page)会从1开始
+          size: 3 //每页数据条数,默认10
+        },
+        offset: 0,
+        htmlNodata: '<p class="upwarp-nodata">数据已经全部加载完毕</p>',
+        htmlLoading:
+          '<p class><img src="data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAEsAAAAkCAYAAADB7MdlAAAA90lEQVRoQ+2ZQQrCMBBFJ1CCN3Dlxlu6cOXCW3bjyhuUIkTUVmjopPmKQuFl2z908uZPmqTBGNUEQrUSoQFLMAGwgCUQEKQ4C1gCAUGKs4AlEBCkOOsTWPvTJVkTzW69G94ed7Nwn7ELY1WxA4c85/fkHxMOcWOp7+an3URrD1sXVjHWzIqwvCI5SY8Jloo05uO+93xNnjG82AksnDWUocZZwAKWvs7irOlSXPwoAQtYv9my4CychbPyXfHfd/+0IW1IG66iDTlIv8rEQTqz61c7+KX7KJ4bP1kVE3CtLNACFrAEAoIUZwFLICBIcRawBAKCFGcJsO6zO5w0GcU2eQAAAABJRU5ErkJggg==" alt class="donwpng isshow" /></p><p class="downwarp-tip">加载中</p>',
+        noMoreSize: 5 //如果列表已无数据,可设置列表的总数量要大于5才显示无更多数据;
+      }
     };
   },
   mounted() {
+    let _this = this;
+    window.addEventListener("mousewheel", this.handleScroll, false);
     var swiper = new Swiper(".swiper-container.swiper3", {
       pagination: {
         el: ".swiper-pagination3"
-      }
-    });
-    this.mescroll = new MeScroll(this.$refs.mescroll, {
-      //在mounted初始化mescroll,确保此处配置的ref有值
-      down: {
-        callback: this.downRefresh,
-        auto: false
       },
-      up: {
-        auto: true,
-        callback: this.upLoading
+      on: {
+        slideChangeTransitionEnd: function() {
+          _this.isIndex0 = !_this.isIndex0;
+        }
       }
     });
   },
   created() {
-    this.loadList_left();
-    this.loadList_right();
+    this.loadList();
   },
   methods: {
-    loadList_left() {
-      this.axios.get("/swiper3_left.json", {}).then(res => {
-        this.cell_item_list = { ...res.data.s3_left_f };
-        this.cell_item_list2 = { ...res.data.s3_left_r };
+    handleScroll(e) {
+      var scrollTop =
+        window.pageYOffset ||
+        document.documentElement.scrollTop ||
+        document.body.scrollTop;
+      console.log(scrollTop);
+    },
+    mescrollInit(mescroll) {
+      this.mescroll = mescroll; // 如果this.mescroll对象没有使用到,则mescrollInit可以不用配置
+    },
+    upCallback(page, mescroll) {
+      console.log("上拉加载");
+
+      if (this.ajaxsum > 2) {
+        this.mescroll.endUpScroll(true);
+        // this.mescroll.showNoMore();
+      } else {
+        this.ajaxsum = this.ajaxsum + 1;
+        console.log(this.ajaxsum);
+        this.axios.get("/swiper3.json", {}).then(res => {
+          this.concat1 = res.data.s3_left_f;
+          this.concat2 = res.data.s3_left_r;
+          this.concat3 = res.data.s3_right;
+          for (let i = 0; i < this.concat1.length; i++) {
+            this.cell_item_list.push(this.concat1[i]);
+          }
+          for (let i = 0; i < this.concat2.length; i++) {
+            this.cell_item_list2.push(this.concat2[i]);
+          }
+          for (let i = 0; i < this.concat3.length; i++) {
+            this.swiper3_right.push(this.concat3[i]);
+          }
+          this.mescroll.endSuccess();
+        });
+      }
+
+      //这是回调
+    },
+    downCallback(page, mescroll) {
+      console.log("下拉刷新");
+      // 次数归零
+      this.ajaxsum = 0;
+      this.axios.get("/swiper3.json", {}).then(res => {
+        this.cell_item_list = res.data.s3_left_f;
+        this.cell_item_list2 = res.data.s3_left_r;
+        this.swiper3_right = res.data.s3_right;
+        this.mescroll.endSuccess();
       });
+      //这是回调
     },
-    loadList_right() {
-      this.axios.get("/swiper3_right.json", {}).then(res => {
-        this.swiper3_right = { ...res.data.s3_right };
-        console.log(res.data);
-        console.log(this.swiper3_right);
-        console.log(this.swiper3_right[0].type);
+    loadList() {
+      this.axios.get("/swiper3.json", {}).then(res => {
+        this.cell_item_list = res.data.s3_left_f;
+        this.cell_item_list2 = res.data.s3_left_r;
+        this.swiper3_right = res.data.s3_right;
       });
-    },
-    // 下拉刷新
-    downRefresh() {
-      console.log(1);
-      this.mescroll.endSuccess();
-    },
-    //上拉加载更多
-    upLoading() {
-      console.log(2);
-      this.mescroll.endSuccess();
     }
   }
 };
@@ -410,6 +457,7 @@ export default {
             width: 100%;
             height: auto;
             display: block;
+            // padding-right: 1px;
             border-top-left-radius: 10px;
             border-top-right-radius: 10px;
           }

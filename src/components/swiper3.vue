@@ -75,10 +75,12 @@
                   <div class="right">
                     <div class="icon">
                       <span>
-                        <i class="iconfont">&#xe60f;</i>{{swiper3_right_item.pinglun}}
+                        <i class="iconfont">&#xe60f;</i>
+                        {{swiper3_right_item.pinglun}}
                       </span>
                       <span>
-                        <i class="iconfont">&#xe60c;</i>{{swiper3_right_item.dianzan}}
+                        <i class="iconfont">&#xe60c;</i>
+                        {{swiper3_right_item.dianzan}}
                       </span>
                     </div>
                   </div>
@@ -104,10 +106,12 @@
                   <div class="right">
                     <div class="icon">
                       <span>
-                        <i class="iconfont">&#xe60f;</i>{{swiper3_right_item.pinglun}}
+                        <i class="iconfont">&#xe60f;</i>
+                        {{swiper3_right_item.pinglun}}
                       </span>
                       <span>
-                        <i class="iconfont">&#xe60c;</i>{{swiper3_right_item.dianzan}}
+                        <i class="iconfont">&#xe60c;</i>
+                        {{swiper3_right_item.dianzan}}
                       </span>
                     </div>
                   </div>
@@ -138,10 +142,12 @@
                   <div class="right">
                     <div class="icon">
                       <span>
-                        <i class="iconfont">&#xe60f;</i>{{swiper3_right_item.pinglun}}
+                        <i class="iconfont">&#xe60f;</i>
+                        {{swiper3_right_item.pinglun}}
                       </span>
                       <span>
-                        <i class="iconfont">&#xe60c;</i>{{swiper3_right_item.dianzan}}
+                        <i class="iconfont">&#xe60c;</i>
+                        {{swiper3_right_item.dianzan}}
                       </span>
                     </div>
                   </div>
@@ -153,7 +159,7 @@
       </div>
     </div>
     <!-- Add Pagination -->
-    <div class="swiper-pagination2"></div>
+    <!-- <div class="swiper-pagination2"></div> -->
   </div>
 </template>>
 <script>
@@ -166,13 +172,18 @@ export default {
     return {
       cell_item_list: [],
       cell_item_list2: [],
-      swiper3_right:[]
+      swiper3_right: []
     };
   },
   mounted() {
     var swiper = new Swiper(".swiper-container.swiper3", {
       pagination: {
         el: ".swiper-pagination3"
+      },
+      on: {
+        slideChangeTransitionEnd: function() {
+          alert(this.activeIndex); //切换结束时，告诉我现在是第几个slide
+        }
       }
     });
   },
@@ -183,12 +194,13 @@ export default {
   methods: {
     loadList_left() {
       this.axios.get("/swiper3_left.json", {}).then(res => {
-        this.cell_item_list=({...res.data.s3_left_f});
-        this.cell_item_list2=({...res.data.s3_left_r})
+        this.cell_item_list = { ...res.data.s3_left_f };
+        this.cell_item_list2 = { ...res.data.s3_left_r };
       });
-    },loadList_right() {
+    },
+    loadList_right() {
       this.axios.get("/swiper3_right.json", {}).then(res => {
-        this.swiper3_right=({...res.data.s3_right});
+        this.swiper3_right = { ...res.data.s3_right };
         console.log(res.data);
         console.log(this.swiper3_right);
         console.log(this.swiper3_right[0].type);
