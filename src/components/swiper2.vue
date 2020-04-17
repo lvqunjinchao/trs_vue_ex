@@ -38,7 +38,7 @@ export default {
 <style scoped lang="scss">
 .swiper-container.swiper2 {
   width: 100%;
-  height: 80px;
+  height: 100%;
   position: relative;
 
   .my-bullet {

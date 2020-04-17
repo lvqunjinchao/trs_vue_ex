@@ -10,7 +10,7 @@ import '@/assets/iconfont/iconfont.css'
 import '@/assets/swiper.min.css'
 import './plugins/axios.js'
 
-
+import $ from 'jquery'
 
 Vue.use(ElementUI);
 Vue.config.productionTip = false

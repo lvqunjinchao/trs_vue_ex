@@ -272,14 +272,14 @@
     <div class="posting js_posting">
       <div class="posting_box js_posting_box open">
         <div class="logo">
-          <div class="new_question">
+          <div class="new_question open">
             <a href="#" class="js_new_question">
               <img src="../assets/222.png" alt />
               <span>提问</span>
             </a>
           </div>
           <img src="../assets/333.png" alt class="logo_pic" />
-          <div class="new_topic">
+          <div class="new_topic open">
             <a href="#" class="js_new_question">
               <img src="../assets/444.png" alt />
               <span>主题</span>
@@ -293,7 +293,6 @@
 
   <script>
 import $ from "jquery";
-
 import Swiper from "swiper";
 import axios from "axios";
 import Swiper1 from "@/components/swiper1.vue";
@@ -315,15 +314,18 @@ export default {
       cell_item_list: [],
       cell_item_list2: [],
       swiper3_right: [],
-      concat1: [],
-      concat2: [],
-      concat3: [],
+      // concat1: [],
+      // concat2: [],
+      // concat3: [],
       ajaxsum: 0,
+      offsettop: 0,
+      zancun: 0,
       mescroll: null,
       isIndex0: true,
       mescrollDown: {
         callback: this.downCallback, // 上拉回调,此处简写; 相当于 callback: function(page, mescroll) { }
         textOutOffset: "松开立即刷新",
+        auto: false,
         htmlContent:
           '<p class><img src="data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAEsAAAAkCAYAAADB7MdlAAAA90lEQVRoQ+2ZQQrCMBBFJ1CCN3Dlxlu6cOXCW3bjyhuUIkTUVmjopPmKQuFl2z908uZPmqTBGNUEQrUSoQFLMAGwgCUQEKQ4C1gCAUGKs4AlEBCkOOsTWPvTJVkTzW69G94ed7Nwn7ELY1WxA4c85/fkHxMOcWOp7+an3URrD1sXVjHWzIqwvCI5SY8Jloo05uO+93xNnjG82AksnDWUocZZwAKWvs7irOlSXPwoAQtYv9my4CychbPyXfHfd/+0IW1IG66iDTlIv8rEQTqz61c7+KX7KJ4bP1kVE3CtLNACFrAEAoIUZwFLICBIcRawBAKCFGcJsO6zO5w0GcU2eQAAAABJRU5ErkJggg==" alt class="donwpng isshow" /></p><p class="downwarp-tip"></p>'
       }, //下拉刷新的配置. (如果下拉刷新和上拉加载处理的逻辑是一样的,则mescrollDown可不用写了)
@@ -335,7 +337,9 @@ export default {
           num: 0, //当前页 默认0,回调之前会加1; 即callback(page)会从1开始
           size: 3 //每页数据条数,默认10
         },
+        auto: false,
         offset: 0,
+        onScroll: this.onScrollfun,
         htmlNodata: '<p class="upwarp-nodata">数据已经全部加载完毕</p>',
         htmlLoading:
           '<p class><img src="data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAEsAAAAkCAYAAADB7MdlAAAA90lEQVRoQ+2ZQQrCMBBFJ1CCN3Dlxlu6cOXCW3bjyhuUIkTUVmjopPmKQuFl2z908uZPmqTBGNUEQrUSoQFLMAGwgCUQEKQ4C1gCAUGKs4AlEBCkOOsTWPvTJVkTzW69G94ed7Nwn7ELY1WxA4c85/fkHxMOcWOp7+an3URrD1sXVjHWzIqwvCI5SY8Jloo05uO+93xNnjG82AksnDWUocZZwAKWvs7irOlSXPwoAQtYv9my4CychbPyXfHfd/+0IW1IG66iDTlIv8rEQTqz61c7+KX7KJ4bP1kVE3CtLNACFrAEAoIUZwFLICBIcRawBAKCFGcJsO6zO5w0GcU2eQAAAABJRU5ErkJggg==" alt class="donwpng isshow" /></p><p class="downwarp-tip">加载中</p>',
@@ -344,8 +348,10 @@ export default {
     };
   },
   mounted() {
+    // 原生滚动监听
+    // window.addEventListener("mousewheel", this.handleScroll, false);
+
     let _this = this;
-    window.addEventListener("mousewheel", this.handleScroll, false);
     var swiper = new Swiper(".swiper-container.swiper3", {
       pagination: {
         el: ".swiper-pagination3"
@@ -360,13 +366,51 @@ export default {
   created() {
     this.loadList();
   },
+  watch: {
+    zancun: function(newValue, oldValue) {
+      $(".new_question").removeClass("open");
+      $(".new_topic").removeClass("open");
+      $(".js_posting_box").removeClass("open");
+      // console.log(newValue, oldValue); //分别是新选择的值，旧的值
+      oldValue = newValue;
+
+      setTimeout(() => {
+        if (newValue == oldValue) {
+          $(".new_question").addClass("open");
+          $(".new_topic").addClass("open");
+          $(".js_posting_box").addClass("open");
+        }
+      }, 1000);
+    }
+  },
   methods: {
-    handleScroll(e) {
-      var scrollTop =
-        window.pageYOffset ||
-        document.documentElement.scrollTop ||
-        document.body.scrollTop;
-      console.log(scrollTop);
+    // 原生滚动监听
+    // handleScroll(e) {
+    //   var scrollTop =
+    //     window.pageYOffset ||
+    //     document.documentElement.scrollTop ||
+    //     document.body.scrollTop;
+    //   console.log(scrollTop);
+    // },
+
+    // 头部固定
+
+    // mescroll监听滚动
+    onScrollfun(mescroll, y) {
+      // console.log(y);
+      this.zancun = y;
+      // console.log(this.zancun);
+      // $(".new_question").removeClass("open");
+      // $(".new_topic").removeClass("open");
+      // $(".js_posting_box").removeClass("open");
+      // 如何判断不滚动了？？？？
+      // this.offsettop= $('.featured_box').position();
+      // console.log(this.offsettop);
+      // if (zancun == y) {
+      //   $(".new_question").addClass("open");
+      //   $(".new_topic").addClass("open");
+      //   $(".js_posting_box").addClass("open");
+      // }
     },
     mescrollInit(mescroll) {
       this.mescroll = mescroll; // 如果this.mescroll对象没有使用到,则mescrollInit可以不用配置
@@ -381,17 +425,17 @@ export default {
         this.ajaxsum = this.ajaxsum + 1;
         console.log(this.ajaxsum);
         this.axios.get("/swiper3.json", {}).then(res => {
-          this.concat1 = res.data.s3_left_f;
-          this.concat2 = res.data.s3_left_r;
-          this.concat3 = res.data.s3_right;
-          for (let i = 0; i < this.concat1.length; i++) {
-            this.cell_item_list.push(this.concat1[i]);
+          // this.concat1 = res.data.s3_left_f;
+          // this.concat2 = res.data.s3_left_r;
+          // this.concat3 = res.data.s3_right;
+          for (let i = 0; i < res.data.s3_left_f.length; i++) {
+            this.cell_item_list.push(res.data.s3_left_f[i]);
           }
-          for (let i = 0; i < this.concat2.length; i++) {
-            this.cell_item_list2.push(this.concat2[i]);
+          for (let i = 0; i < res.data.s3_left_r.length; i++) {
+            this.cell_item_list2.push(res.data.s3_left_r[i]);
           }
-          for (let i = 0; i < this.concat3.length; i++) {
-            this.swiper3_right.push(this.concat3[i]);
+          for (let i = 0; i < res.data.s3_right.length; i++) {
+            this.swiper3_right.push(res.data.s3_right[i]);
           }
           this.mescroll.endSuccess();
         });

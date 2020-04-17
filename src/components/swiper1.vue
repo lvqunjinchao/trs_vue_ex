@@ -59,7 +59,7 @@ export default {
     z-index: 1;
   }
   img {
-    width: 240px;
+    width: 100%;
     height: auto;
     display: inline-block;
     border-radius: 10px;
